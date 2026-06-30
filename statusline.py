@@ -5,12 +5,13 @@ Reads the session JSON on stdin and prints a single compact line:
 
   Opus · my-app · main +2~1 · ▓▓▓░░░░░ 31% · 🏁 Demo Day 98d 14h · speedrun ↗ · $0.42
 
-The headline segment is a live countdown to Speedrun Demo Day. The date is
-read from a small public config file (speedrun.json in this repo) so it can be
-re-dated for the next cohort without anyone reinstalling — the status line
-fetches it out of band (a detached `--refresh`), caches it, and reads the cache
-instantly so the network never blocks the line. A baked-in default keeps the
-countdown working on a fresh or offline install until the first fetch lands.
+The headline segment is a live countdown to Speedrun Demo Day. The date is read
+from a small shared public config (cohort.json in a16z-speedrun/speedrun-config)
+so it can be re-dated for the next cohort without anyone reinstalling — the
+status line fetches it out of band (a detached `--refresh`), caches it, and reads
+the cache instantly so the network never blocks the line. A baked-in default
+keeps the countdown working on a fresh or offline install until the first fetch
+lands.
 
 Once Demo Day passes, the countdown shows "It's Demo Day!" for the day, then
 disappears — the line cleanly reverts to your normal vitals with no stale text.
@@ -46,7 +47,7 @@ GOLD = "\033[38;5;179m"     # speedrun gold
 SEP = f" {DIM}·{RESET} "
 
 # ── version + remote config ────────────────────────────────────────────
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 
 # A fresh or offline install still counts down using these baked-in defaults;
 # the fetched config (when it lands) overrides them. ISO-8601 with an explicit
@@ -61,7 +62,7 @@ CONFIG_CACHE = os.path.join(CACHE_DIR, "speedrun-statusline.json")
 CONFIG_REFRESH_SECS = 6 * 3600  # dates change rarely — check ~4×/day
 CONFIG_URL = os.environ.get(
     "SR_STATUSLINE_CONFIG_URL",
-    "https://raw.githubusercontent.com/a16z-speedrun/speedrun-statusline/main/speedrun.json",
+    "https://raw.githubusercontent.com/a16z-speedrun/speedrun-config/main/cohort.json",
 )
 REPO_URL = "https://github.com/a16z-speedrun/speedrun-statusline"
 
@@ -267,10 +268,12 @@ def demoday_segment(now, cfg):
     day, then returns None so the segment disappears once the date is well past."""
     if DEMODAY_DISABLED:
         return None
-    epoch = parse_iso(cfg.get("demo_day") or DEFAULT_DEMO_DAY)
+    # Founder build counts to Speedrun Demo Day; Alpha stays internal-only.
+    cohort = (cfg.get("cohorts") or {}).get("speedrun") or {}
+    epoch = parse_iso(cohort.get("demo_day") or DEFAULT_DEMO_DAY)
     if not epoch:
         return None
-    milestone = cfg.get("milestone") or DEFAULT_MILESTONE
+    milestone = cohort.get("milestone") or DEFAULT_MILESTONE
     diff = epoch - now
     if diff <= -LIVE_WINDOW_SECS:
         return None  # well past — revert to normal vitals
@@ -298,7 +301,7 @@ def _semver_newer(a, b):
 
 def version_segment(cfg):
     """A quiet, clickable nudge when a newer status line has shipped."""
-    latest = cfg.get("latest_version")
+    latest = (cfg.get("statusline") or {}).get("latest_version")
     if not latest or not _semver_newer(latest, VERSION):
         return None
     return link(REPO_URL, color("⬆ update", YELLOW))

@@ -45,9 +45,9 @@ Segments degrade gracefully — anything unavailable is simply omitted — and o
 
 ## How the countdown stays current
 
-The Demo Day date isn't hard-coded into your install — it lives in [`speedrun.json`](./speedrun.json) in this repo. The status line fetches it **out of band** (a detached background refresh, cached to `~/.claude/speedrun-statusline.json`, checked a few times a day) and reads the cache instantly, so the network never blocks your prompt. A baked-in default keeps the countdown working on a fresh or offline install until the first fetch lands.
+The Demo Day date isn't hard-coded into your install — it lives in a shared public config, [`cohort.json`](https://github.com/a16z-speedrun/speedrun-config/blob/main/cohort.json) in `a16z-speedrun/speedrun-config` (also read by the new-tab extension). The status line fetches it **out of band** (a detached background refresh, cached to `~/.claude/speedrun-statusline.json`, checked a few times a day) and reads the cache instantly, so the network never blocks your prompt. A baked-in default keeps the countdown working on a fresh or offline install until the first fetch lands.
 
-That means **the date can be re-pointed for the next cohort by editing one file here** — every install picks it up within hours, no reinstall. The same file carries `latest_version`, which drives the `⬆ update` nudge when the script itself changes.
+That means **the date can be re-pointed for the next cohort by editing one file** — every install picks it up within hours, no reinstall. That file also carries `statusline.latest_version`, which drives the `⬆ update` nudge when the script itself changes.
 
 ## Configuration
 
@@ -61,4 +61,4 @@ Environment variables (set in your shell profile):
 
 ## Maintainers
 
-To re-date for the next cohort: edit `speedrun.json` (`demo_day`, `milestone`, `cohort`) and commit. To ship a script change: bump `VERSION` **and** `latest_version` in `speedrun.json` so installs surface the `⬆ update` nudge.
+To re-date for the next cohort: edit `cohorts.speedrun` (`demo_day`, `milestone`, `cohort`) in [`speedrun-config/cohort.json`](https://github.com/a16z-speedrun/speedrun-config/blob/main/cohort.json) and commit. To ship a script change: bump `VERSION` here **and** `statusline.latest_version` in that same file so installs surface the `⬆ update` nudge.
